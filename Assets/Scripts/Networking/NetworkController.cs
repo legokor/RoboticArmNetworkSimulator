@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
@@ -8,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
+using System.Web;
 public class NetworkController : MonoBehaviour
 {
     public HttpListener listener;
@@ -15,11 +17,31 @@ public class NetworkController : MonoBehaviour
 
     Thread SocketThread;
 
+    [SerializeField] private InputController ic;
+
+    private CylindricalCoordinate lastPos = new CylindricalCoordinate();
+
+    public CylindricalCoordinate QueryLastPos(){
+        return lastPos;
+    }
+
     void Start()
     {
         Application.runInBackground = true;
 
         startServer();
+    }
+
+    private void Update(){
+        
+        //weird ranges because of the weird setup of the sliders
+
+        //I set it up so that the hands 0.5m from the center corresponds
+        //to the largest possible deflection of the robot arms
+
+        ic.SetHorizontalExtension((lastPos.r * 76)-24.0f); //mapping: -24 to 14 
+        ic.SetRotationAngle(((lastPos.f)/6.28f)+0.5f); //mapping: 0 to 1
+        ic.SetVerticalElevation((lastPos.z * 80)-35); //mapping: -35 to 5
     }
 
     void startServer()
@@ -58,13 +80,39 @@ public class NetworkController : MonoBehaviour
 
             // Print out some info about the request
             UnityEngine.Debug.Log(req.Url.ToString());
-            UnityEngine.Debug.Log(req.HttpMethod);
-            UnityEngine.Debug.Log(req.UserHostName);
-            UnityEngine.Debug.Log(req.UserAgent);
+            //UnityEngine.Debug.Log(req.HttpMethod);
+            //UnityEngine.Debug.Log(req.UserHostName);
+            //UnityEngine.Debug.Log(req.UserAgent);
+            
+            Uri uri = new Uri(req.Url.ToString());
+            NameValueCollection queryParameters = HttpUtility.ParseQueryString(uri.Query);
+
+            //string r = queryParameters["r"];
+            //string f = queryParameters["f"];
+            //string z = queryParameters["z"];
+
+            //UnityEngine.Debug.Log(r + " " +f+ " " + z);
+            //ic.SetHorizontalExtension();
+            //ic.SetRotationAngle(float.Parse(f));
+            //ic.SetVerticalElevation(float.Parse(z));
+
+            lastPos.f = float.Parse(queryParameters["f"]);
+            lastPos.r = float.Parse(queryParameters["r"]);
+            lastPos.z = float.Parse(queryParameters["z"]);
+            
 
             resp.Close();
 
+            //maybe better to increase it or couple it to framerate 
             Thread.Sleep(10);
         }
     }
+
+    public class CylindricalCoordinate {
+        public float r { get; set; }
+        public float f { get; set; }
+        public float z { get; set; }
+    }
 }
+
+
