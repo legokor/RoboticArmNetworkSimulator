@@ -39,9 +39,9 @@ public class NetworkController : MonoBehaviour
         //I set it up so that the hands 0.5m from the center corresponds
         //to the largest possible deflection of the robot arms
 
-        ic.SetHorizontalExtension((lastPos.r * 76)-24.0f); //mapping: -24 to 14 
+        ic.SetHorizontalExtension(((lastPos.r) * 38*3)-24.0f); //mapping: -24 to 14 
         ic.SetRotationAngle(((lastPos.f)/6.28f)+0.5f); //mapping: 0 to 1
-        ic.SetVerticalElevation((lastPos.z * 80)-35); //mapping: -35 to 5
+        ic.SetVerticalElevation(((lastPos.z - 0.25f) * 80)-35); //mapping: -35 to 5
     }
 
     void startServer()
